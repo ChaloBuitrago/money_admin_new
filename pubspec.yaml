@@ -30,6 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  sqflite: ^2.2.8+4  #Base de datos SQLite
+  path: ^1.9.0  #Para manejar rutas de BD
+  workmanager: ^0.9.0+3  #Para tareas en segundo plano
+  provider: ^6.0.5  #Para manejo de estado
+  http: ^0.13.5  #Para integrar API de SMS
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
