@@ -36,7 +36,7 @@ screens/
     dashboard_screen.dart
     user_management_screen.dart
     loan_management_screen.dart
-    report_screen.dart
+    report_screen.dart 
 models/
     user.dart
     prestamo.dart
@@ -51,7 +51,7 @@ workers/
 ## Avances por módulo
 - [] LoginScreen (pantalla básica con navegación)
 - [] DashboardScreen (pantalla con botones de navegación)
-- [] UserManagementScreen (CRUD de usuarios)
+- [x] UserManagementScreen (CRUD de usuarios)
 - [] LoanManagementScreen (gestión de préstamos y pagos)
 - [] ReportScreen (generación de reportes)
 - [] DatabaseHelper (CRUD en SQLite)
@@ -61,7 +61,7 @@ workers/
 
 ## Roadmap
 - Fase 1: Configuración inicial ✅ //Completado
-- Fase 2: Modelado de datos y servicios ⏳
+- Fase 2: Modelado de datos y servicios ✅ //Completado 17/02/2026
 - Fase 3: Interfaz de usuario
 - Fase 4: Automatización y notificaciones
 - Fase 5: Reportes
