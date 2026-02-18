@@ -52,4 +52,75 @@ class DatabaseHelper {
       )
     ''');
   }
+
+  //-------------- Métodos CRUD para Users -------------
+
+  Future<int> insertUser(User user) async {
+    final db = await database;
+    return await db.insert('users', user.toMap());
+  }
+
+  Future<List<User>> getUsers() async {
+    final db = await database;
+    final result = await db.query('users');
+    return result.map((map) => User.fromMap(map)).toList();
+  }
+
+  Future<int> updateUser(User user) async {
+    final db = await database;
+    return await db.update('users', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
+  }
+
+  Future<int> deleteUser(int id) async {
+    final db = await database;
+    return await db.delete('users', where: 'id = ?', whereArgs: [id]);
+  }
+
+  //-------------- Métodos CRUD para Prestamos -------------
+  Future<int> insertPrestamo(Prestamo prestamo) async {
+    final db = await database;
+    return await db.insert('prestamos', prestamo.toMap());
+  }
+
+  Future<List<Prestamo>> getPrestamos() async {
+    final db = await database;
+    final result = await db.query('prestamos');
+    return result.map((map) => Prestamo.fromMap(map)).toList();
+  }
+
+  Future <int> updatePrestamo(Prestamo prestamo) async {
+    final db = await database;
+    return await db.update('prestamos', prestamo.toMap(), where: 'id = ?', whereArgs: [prestamo.id]);
+  }
+
+  Future<int> deletePrestamo(int id) async {
+    final db = await database;
+    return await db.delete('prestamos', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ------------- Métodos CRUD para Pagos -------------
+
+  Future<int> insertPago(Pago pago) async {
+    final db = await database;
+    return await db.insert('pagos', pago.toMap());
+  }
+
+  Future<List<Pago>> getPagos() async {
+    final db = await database;
+    final result = await db.query('pagos');
+    return result.map((map) => Pago.fromMap(map)).toList();
+  }
+
+  Future<int> updatePago(Pago pago) async {
+    final db = await database;
+    return await db.update('pagos', pago.toMap(), where: 'id = ?', whereArgs: [pago.id]);
+  }
+
+  Future<int> deletePago(String id) async {
+    final db = await database;
+    return await db.delete('pagos', where: 'id = ?', whereArgs: [id]);
+  }
+
+
+
 }
