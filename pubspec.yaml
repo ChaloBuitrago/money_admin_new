@@ -30,6 +30,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_sms: ^3.0.1  #Para enviar SMS
+  permission_handler: ^12.0.1  #Para manejar permisos de SMS
+  telephony_sms: ^0.0.4 #Para recibir SMS
   sqflite: ^2.2.8+4  #Base de datos SQLite
   path: ^1.9.0  #Para manejar rutas de BD
   workmanager: ^0.9.0+3  #Para tareas en segundo plano
