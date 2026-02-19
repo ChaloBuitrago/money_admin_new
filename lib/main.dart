@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'services/sms_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
-import 'models/user.dart';
+import 'screens/user_management_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const DashboardScreen(),
-        // '/users': (context) => const UserManagementScreen(),
+        '/users': (context) => const UserManagementScreen(),
 
       },
     );
