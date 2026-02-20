@@ -60,7 +60,7 @@ class DatabaseHelper {
     return await db.insert('users', user.toMap());
   }
 
-  Future<List<User>> getUsers() async {
+  Future<List<User>> getUsuarios() async {
     final db = await database;
     final result = await db.query('users');
     return result.map((map) => User.fromMap(map)).toList();
