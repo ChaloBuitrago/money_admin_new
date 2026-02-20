@@ -5,6 +5,7 @@ import 'services/sms_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/user_management_screen.dart';
+import 'screens/loan_management_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/users': (context) => const UserManagementScreen(),
+        '/loans': (context) => const LoanManagementScreen(),
 
       },
     );
