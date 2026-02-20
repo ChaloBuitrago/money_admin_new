@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/user_management_screen.dart';
 import 'screens/loan_management_screen.dart';
+import 'screens/report_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,13 +18,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MOney Admin',
+      title: 'Money Admin',
       initialRoute: '/login', //Aqui se define en que pagina inicia la app
       routes: {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/users': (context) => const UserManagementScreen(),
         '/loans': (context) => const LoanManagementScreen(),
+        '/reports': (context) => const ReportScreen(),
 
       },
     );
