@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/users': (context) => const UserManagementScreen(),
-        '/loans': (context) => const LoanManagementScreen(),
+        '/loans': (context) => const PrestamoManagementScreen(),
         '/reports': (context) => const ReportScreen(),
 
       },
