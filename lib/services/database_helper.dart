@@ -19,11 +19,12 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
+
+    //Tabla Usuarios
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,16 +33,20 @@ class DatabaseHelper {
       )
     ''');
 
+    //Tabla de prestamos
     await db.execute('''
       CREATE TABLE prestamos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         userId INTEGER NOT NULL,
         monto REAL NOT NULL,
         fecha TEXT NOT NULL,
+        estado TEXT NOT NULL,
+        periodicidad TEXT NOT NULL,
         FOREIGN KEY (userId) REFERENCES users (id)
       )
     ''');
 
+    //Tabla de pagos
     await db.execute('''
       CREATE TABLE pagos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,11 +137,8 @@ class DatabaseHelper {
 
   Future<int> updatePago(Pago pago) async {
     final db = await database;
-  return await db.update(
-        'pagos',
-        pago.toMap(),
-        where: 'id = ?',
-        whereArgs: [pago.id]
+    return await db.update('pagos', pago.toMap(),
+        where: 'id = ?', whereArgs: [pago.id]
     );
   }
 

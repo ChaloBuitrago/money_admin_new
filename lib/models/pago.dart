@@ -1,6 +1,6 @@
 class Pago {
   final int? id;
-  final int prestamoId;
+  final int prestamoId; //FK a prestamos
   final double monto;
   final String fecha;
 
