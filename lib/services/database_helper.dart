@@ -42,6 +42,8 @@ class DatabaseHelper {
         fecha TEXT NOT NULL,
         estado TEXT NOT NULL,
         periodicidad TEXT NOT NULL,
+        interes REAL NOT NULL,
+        saldoPendiente REAL NOT NULL,
         FOREIGN KEY (userId) REFERENCES users (id)
       )
     ''');
@@ -120,6 +122,15 @@ class DatabaseHelper {
         where: 'id = ?',
         whereArgs: [id]
     );
+  }
+
+  Future<List<Prestamo>> getPrestamosPendientes() async {
+    final db = await database;
+    final result = await db.query(
+        'prestamos',
+        where: 'saldoPendiente > 0',
+    );
+    return result.map((json) => Prestamo.fromMap(json)).toList();
   }
 
   // ------------- Métodos CRUD para Pagos -------------

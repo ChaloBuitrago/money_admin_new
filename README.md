@@ -49,12 +49,12 @@ workers/
     notification_worker.dart
 
 ## Avances por módulo
-- [] LoginScreen (pantalla básica con navegación)
-- [] DashboardScreen (pantalla con botones de navegación)
+- [x] LoginScreen (pantalla básica con navegación)
+- [x] DashboardScreen (pantalla con botones de navegación)
 - [x] UserManagementScreen (CRUD de usuarios)
-- [] LoanManagementScreen (gestión de préstamos y pagos)
+- [x] LoanManagementScreen (gestión de préstamos y pagos)
 - [] ReportScreen (generación de reportes)
-- [] DatabaseHelper (CRUD en SQLite)
+- [x] DatabaseHelper (CRUD en SQLite)
 - [] SmsService (envío de notificaciones)
 - [] ReportService (cálculo y exportación de reportes)
 - [] NotificationWorker (automatización con WorkManager)
@@ -62,7 +62,7 @@ workers/
 ## Roadmap
 - Fase 1: Configuración inicial ✅ //Completado
 - Fase 2: Modelado de datos y servicios ✅ //Completado 17/02/2026
-- Fase 3: Interfaz de usuario
+- Fase 3: Interfaz de usuario y navegación ✅ //Completado 19/02/2026
 - Fase 4: Automatización y notificaciones
 - Fase 5: Reportes
 - Fase 6: Documentación y entrega final
