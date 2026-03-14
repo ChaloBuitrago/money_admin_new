@@ -7,6 +7,7 @@ class Prestamo {
   final String periodicidad;  //Semanal, Quincenal y Mensual
   final double interes; //Interés aplicado al préstamo
   final double saldoPendiente; //Saldo pendiente del préstamo
+  final int plazo;
 
   Prestamo({
     this.id,
@@ -17,6 +18,7 @@ class Prestamo {
     required this.periodicidad,
     required this.interes,
     required this.saldoPendiente,
+    required this.plazo,
   });
 
   factory Prestamo.fromMap(Map<String, dynamic> json) => Prestamo(
@@ -28,6 +30,7 @@ class Prestamo {
     periodicidad: json['periodicidad'],
     interes: (json['interes'] is String) ? double.parse(json['interes']) : (json['interes'] as num).toDouble(),
     saldoPendiente: (json['saldoPendiente'] is String) ? double.parse(json['saldoPendiente']) : (json['saldoPendiente'] as num).toDouble(),
+    plazo: json['plazo'],
   );
 
   Map<String, dynamic> toMap() {
@@ -40,6 +43,7 @@ class Prestamo {
       'periodicidad': periodicidad,
       'interes': interes,
       'saldoPendiente': saldoPendiente,
+      'plazo': plazo,
     };
   }
 }

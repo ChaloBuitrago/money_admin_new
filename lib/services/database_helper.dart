@@ -44,6 +44,7 @@ class DatabaseHelper {
         periodicidad TEXT NOT NULL,
         interes REAL NOT NULL,
         saldoPendiente REAL NOT NULL,
+        plazo INTEGER,
         FOREIGN KEY (userId) REFERENCES users (id)
       )
     ''');
@@ -55,6 +56,7 @@ class DatabaseHelper {
         prestamoId INTEGER NOT NULL,
         monto REAL NOT NULL,
         fecha TEXT NOT NULL,
+        cuotaEsperada REAL,
         FOREIGN KEY (prestamoId) REFERENCES prestamos (id)
       )
     ''');

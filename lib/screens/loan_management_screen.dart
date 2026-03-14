@@ -3,6 +3,7 @@ import 'package:money_admin_new/models/prestamo.dart';
 import 'package:money_admin_new/models/pago.dart';
 import 'package:money_admin_new/models/user.dart';
 import '../services/database_helper.dart';
+import '../services/user_service.dart';
 
 class PrestamoManagementScreen extends StatefulWidget {
   const PrestamoManagementScreen({super.key});
@@ -37,11 +38,12 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
   void _crearPrestamo() async {
     final montoController = TextEditingController();
     final interesController = TextEditingController();
+    final plazoController = TextEditingController();
     User? selectedUser;
     String? selectedPeriodicidad;
     DateTime? selectedDate;
 
-    final usuarios = await DatabaseHelper.instance.getUsuarios();
+    final usuarios = await UserService.instance.getUsuarios();
 
     await showDialog(
       context: context,
@@ -67,6 +69,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                           decoration: const InputDecoration(
                               labelText: "Porcentaje de interés (%)"),
                         ),
+
                         // Dropdown de usuarios
                         DropdownButton<User>(
                           value: selectedUser,
@@ -83,6 +86,13 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                               selectedUser = value;
                             });
                           },
+                        ),
+
+                        TextField(
+                          controller: plazoController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              labelText: "Plazo del prestamo en meses"),
                         ),
 
                         // Dropdown de periodicidad
@@ -139,6 +149,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                             interesController.text.isNotEmpty) {
                           final monto = double.parse(montoController.text);
                           final interes = double.parse(interesController.text);
+                          final plazo = int.parse(plazoController.text);
                           final montoTotal = monto + (monto * interes / 100);
 
                           final prestamo = Prestamo(
@@ -148,12 +159,16 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                             estado: "Pendiente",
                             periodicidad: selectedPeriodicidad!,
                             interes: interes,
-                            saldoPendiente: montoTotal, //saldo inicial con interes
+                            saldoPendiente: montoTotal,
+                            //saldo inicial con interes
+                            plazo: plazo,
+
                           );
                           await DatabaseHelper.instance.insertPrestamo(
                               prestamo);
                           Navigator.pop(context);
                           _refreshPrestamos();
+                          _refreshPendientes();
                         }
                       },
                       child: const Text("Guardar"),
@@ -162,6 +177,22 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                 ),
           ),
     );
+  }
+
+  //Calcular cuota segun periodicidad y plazo
+  double calcularCuota(Prestamo prestamo) {
+    double montoReal = prestamo.monto +
+        (prestamo.monto * prestamo.interes / 100);
+
+    int numeroCuotas;
+    if (prestamo.periodicidad == "Mensual") {
+      numeroCuotas = prestamo.plazo;
+    } else if (prestamo.periodicidad == "Quincenal") {
+      numeroCuotas = prestamo.plazo * 2;
+    } else {
+      numeroCuotas = prestamo.plazo * 4;
+    }
+    return montoReal / numeroCuotas;
   }
 
   void _editarPrestamo(Prestamo loan) async {
@@ -278,8 +309,10 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                             estado: loan.estado,
                             periodicidad: selectedPeriodicidad!,
                             interes: double.parse(interesController.text),
-                            saldoPendiente: loan
-                                .saldoPendiente, // Para simplificar o recalcular
+                            saldoPendiente: loan.saldoPendiente,
+                            // Para simplificar o recalcular
+                            plazo: loan
+                                .plazo, // Mantener el plazo original o agregar campo para editarlo
                           );
                           await DatabaseHelper.instance.updatePrestamo(
                               updatedLoan);
@@ -362,6 +395,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
       periodicidad: prestamo.periodicidad,
       interes: prestamo.interes,
       saldoPendiente: nuevoSaldo,
+      plazo: prestamo.plazo,
     );
     //Guardar actualizacion en la BD
     await DatabaseHelper.instance.updatePrestamo(updateLoan);
@@ -370,14 +404,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
   }
 
   void _confirmarPago(Prestamo prestamo) async {
-    double montoReal = prestamo.monto +
-        (prestamo.monto * prestamo.interes / 100);
-    int numeroCuotas = (prestamo.periodicidad == "Semanal")
-        ? 4
-        : (prestamo.periodicidad == "Quincenal")
-        ? 2
-        : 1;
-    double cuota = montoReal / numeroCuotas;
+    double cuota = calcularCuota(prestamo);
 
     final pago = Pago(
       prestamoId: prestamo.id!,
@@ -385,7 +412,6 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
       fecha: DateTime.now().toIso8601String(),
       cuotaEsperada: cuota,
     );
-
     await DatabaseHelper.instance.insertPago(pago);
 
     double nuevoSaldo = prestamo.saldoPendiente - cuota;
@@ -400,9 +426,11 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
       periodicidad: prestamo.periodicidad,
       interes: prestamo.interes,
       saldoPendiente: nuevoSaldo,
+      plazo: prestamo.plazo,
     );
 
     await DatabaseHelper.instance.updatePrestamo(updateLoan);
+    _refreshPendientes();
     _refreshPrestamos();
   }
 
@@ -415,8 +443,10 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
           // Sección de préstamos pendientes
           const Padding(
             padding: EdgeInsets.all(8.0),
-            child: Text("Préstamos pendientes de pago",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(
+              "Préstamos pendientes de pago",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           Expanded(
             child: FutureBuilder<List<Prestamo>>(
@@ -431,7 +461,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                   DateTime fechaPrestamo = DateTime.parse(prestamo.fecha);
 
                   Duration intervalo;
-                  if(prestamo.periodicidad == "Semanal") {
+                  if (prestamo.periodicidad == "Semanal") {
                     intervalo = const Duration(days: 7);
                   } else if (prestamo.periodicidad == "Quincenal") {
                     intervalo = const Duration(days: 15);
@@ -439,9 +469,14 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                     intervalo = const Duration(days: 30);
                   }
 
-                  DateTime proximoPago = fechaPrestamo.add(intervalo);
-                  //Mostrar solo si ya corresponde pagar
-                  return DateTime.now().isAfter(proximoPago);
+                  final diferenciaDias = DateTime
+                      .now()
+                      .difference(fechaPrestamo)
+                      .inDays;
+                  final intervalosPasados = (diferenciaDias / intervalo.inDays)
+                      .floor();
+
+                  return intervalosPasados > 0 && prestamo.saldoPendiente > 0;
                 }).toList();
 
                 if (pendientes.isEmpty) {
@@ -452,20 +487,29 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                   itemBuilder: (context, index) {
                     final prestamo = pendientes[index];
 
-                    double montoReal = prestamo.monto + (prestamo.monto * prestamo.interes / 100);
-                    int numeroCuotas = (prestamo.periodicidad == "Semanal")
-                        ? 4
-                        : (prestamo.periodicidad == "Quincenal")
-                        ? 2
-                        : 1;
+                    double montoReal =
+                        prestamo.monto +
+                            (prestamo.monto * prestamo.interes / 100);
+                    int numeroCuotas;
+                    if (prestamo.periodicidad == "Mensual") {
+                      numeroCuotas = prestamo.plazo;
+                    } else if (prestamo.periodicidad == "Quincenal") {
+                      numeroCuotas = prestamo.plazo * 2;
+                    } else {
+                      numeroCuotas = prestamo.plazo * 4;
+                    }
+
                     double cuota = montoReal / numeroCuotas;
 
                     return Card(
                       child: ListTile(
-                        title: Text("Usuario: ${prestamo.userId} - Monto Total: ${prestamo.monto}"),
+                        title: Text(
+                            "Usuario: ${prestamo
+                                .userId} - Monto Total: ${prestamo.monto}"),
                         subtitle: Text(
-                            "Saldo pendiente: ${prestamo.saldoPendiente} - Estado: ${prestamo.estado}\n"
-                            "Cuota esperada: $cuota"
+                          "Saldo pendiente: ${prestamo
+                              .saldoPendiente} - Estado: ${prestamo.estado}\n"
+                              "Cuota esperada: $cuota",
                         ),
                         trailing: ElevatedButton(
                           onPressed: () => _confirmarPago(prestamo),
@@ -482,8 +526,10 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
           // Sección de todos los préstamos
           const Padding(
             padding: EdgeInsets.all(8.0),
-            child: Text("Todos los préstamos",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(
+              "Todos los préstamos",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           Expanded(
             child: FutureBuilder<List<Prestamo>>(
@@ -500,28 +546,43 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                 return ListView.builder(
                   itemCount: prestamos.length,
                   itemBuilder: (context, index) {
-                    final loan = prestamos[index];
+                    final prestamo = prestamos[index];
                     return Card(
-                      child: ListTile(
-                        title: Text("Monto: \$${loan.monto}"),
-                        subtitle: Text(
-                            "Fecha: ${loan.fecha} - Estado: ${loan
-                                .estado} - Periodicidad: ${loan.periodicidad}"),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                  Icons.payment, color: Colors.green),
-                              onPressed: () => _registrarPago(loan),
+                      child: FutureBuilder<User?>(
+                        future: UserService.instance.getUsuarioById(prestamo
+                            .userId),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const ListTile(
+                                title: Text("Cargando usuario..."));
+                          }
+
+                          final usuario = snapshot.data!;
+                          return ListTile(
+                            title: Text(
+                                "Usuario: ${usuario.nombre} - ${usuario
+                                    .telefono}"),
+                            subtitle: Text(
+                              "Monto: ${prestamo.monto}\n"
+                                  "Interés: ${prestamo.interes}%\n"
+                                  "Plazo: ${prestamo.plazo} meses\n"
+                                  "Periodicidad: ${prestamo.periodicidad}\n"
+                                  "Cuota esperada: ${calcularCuota(prestamo)
+                                  .toStringAsFixed(2)}",
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _eliminarPrestamo(loan.id!),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                      Icons.payment, color: Colors.green),
+                                  onPressed: () => _registrarPago(prestamo),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        onTap: () => _editarPrestamo(loan),
+                            onTap: () => _editarPrestamo(prestamo),
+                          );
+                        },
                       ),
                     );
                   },
@@ -531,10 +592,12 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: _crearPrestamo,
         child: const Icon(Icons.add),
       ),
+
     );
   }
 }
