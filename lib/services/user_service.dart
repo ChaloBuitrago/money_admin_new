@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/user.dart';
+import 'database_helper.dart';
 
 class UserService {
   static final UserService instance = UserService._init();
@@ -23,7 +24,7 @@ class UserService {
 
   Future _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE usuarios (
+      CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT,
         telefono TEXT
@@ -33,13 +34,13 @@ class UserService {
 
   Future<int> insertUsuario(User user) async {
     final db = await instance.database;
-    return await db.insert('usuarios', user.toMap());
+    return await db.insert('users', user.toMap());
   }
 
   Future<int> updateUsuario(User user) async {
     final db = await instance.database;
     return await db.update(
-      'usuarios',
+      'users',
       user.toMap(),
       where: 'id = ?',
       whereArgs: [user.id],
@@ -49,7 +50,7 @@ class UserService {
   Future<int> deleteUsuario(int id) async {
     final db = await instance.database;
     return await db.delete(
-      'usuarios',
+      'users',
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -57,14 +58,14 @@ class UserService {
 
   Future<List<User>> getUsuarios() async {
     final db = await instance.database;
-    final result = await db.query('usuarios');
+    final result = await db.query('users');
     return result.map((json) => User.fromMap(json)).toList();
   }
 
   Future<User?> getUsuarioById(int id) async {
     final db = await instance.database;
     final result = await db.query(
-      'usuarios',
+      'users',
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -73,4 +74,5 @@ class UserService {
     }
     return null;
   }
+
 }
