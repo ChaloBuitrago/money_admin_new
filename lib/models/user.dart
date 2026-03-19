@@ -6,10 +6,10 @@ class User {
   User({this.id, required this.nombre, required this.telefono});
 
   //Convertir objeto a mapa para SQLite
-  factory User.fromMap(Map<String, dynamic> json) => User(
-    id: json['id'],
-    nombre: json['nombre'],
-    telefono: json['telefono'],
+  factory User.fromMap(Map<String, dynamic> map) => User(
+    id: map['id'],
+    nombre: map['nombre'],
+    telefono: map['telefono'],
   );
     Map<String, dynamic> toMap(){
       return {

@@ -1,78 +1,31 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import '../models/user.dart';
-import 'database_helper.dart';
+import 'database_helper.dart'; // Importamos el único Helper
 
 class UserService {
+  // Mantenemos el Singleton
   static final UserService instance = UserService._init();
-  static Database? _database;
-
   UserService._init();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('app.db');
-    return _database!;
-  }
-
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(path, version: 1, onCreate: _createDB);
-  }
-
-  Future _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT,
-        telefono TEXT
-      )
-    ''');
-  }
+  // ELIMINAMOS: Toda la lógica de _initDB, _createDB y el objeto Database.
+  // Ahora usamos directamente la instancia de DatabaseHelper.
 
   Future<int> insertUsuario(User user) async {
-    final db = await instance.database;
-    return await db.insert('users', user.toMap());
+    return await DatabaseHelper.instance.insertUser(user);
   }
 
   Future<int> updateUsuario(User user) async {
-    final db = await instance.database;
-    return await db.update(
-      'users',
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
-    );
+    return await DatabaseHelper.instance.updateUser(user);
   }
 
   Future<int> deleteUsuario(int id) async {
-    final db = await instance.database;
-    return await db.delete(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await DatabaseHelper.instance.deleteUser(id);
   }
 
   Future<List<User>> getUsuarios() async {
-    final db = await instance.database;
-    final result = await db.query('users');
-    return result.map((json) => User.fromMap(json)).toList();
+    return await DatabaseHelper.instance.getUsuarios();
   }
 
   Future<User?> getUsuarioById(int id) async {
-    final db = await instance.database;
-    final result = await db.query(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (result.isNotEmpty) {
-      return User.fromMap(result.first);
-    }
-    return null;
+    return await DatabaseHelper.instance.getUsuarioById(id);
   }
-
 }

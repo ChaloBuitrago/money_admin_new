@@ -19,7 +19,17 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+        path,
+        version: 1,
+        onCreate: _createDB,
+        onConfigure: _onConfigure,
+    );
+  }
+
+  //Apartado esencial: Si se borra un usuario, se borra el pretamo para que no quede huerfano
+  Future _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
   }
 
   Future _createDB(Database db, int version) async {
@@ -57,9 +67,41 @@ class DatabaseHelper {
         monto REAL NOT NULL,
         fecha TEXT NOT NULL,
         cuotaEsperada REAL,
-        FOREIGN KEY (prestamoId) REFERENCES prestamos (id)
+        FOREIGN KEY (prestamoId) REFERENCES prestamos (id) ON DELETE CASCADE
       )
     ''');
+  }
+
+  // ------- MÉTODOS MEJORADOS ------
+
+  //1. Transacción de Pago: Evita que se registre el pago pero no se descuente del saldo
+  Future<void> registrarPago(Pago pago, double nuevoSaldo, String nuevoEstado) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // Insertar el pago
+      await txn.insert('pagos', pago.toMap());
+
+      // Actualizar el préstamo dentro de la misma operación
+      await txn.update(
+        'prestamos',
+        {'saldoPendiente': nuevoSaldo, 'estado': nuevoEstado},
+        where: 'id = ?',
+        whereArgs: [pago.prestamoId],
+      );
+    });
+  }
+
+  //2. Obtener pagos de un préstamo especifico
+  Future<List<Pago>> getPagosPorPrestamo(int prestamoId) async {
+    final db = await database;
+    final result = await db.query(
+      'pagos',
+      where: 'prestamoId = ?',
+      whereArgs: [prestamoId],
+      orderBy: 'fecha DESC',
+    );
+    return result.map((map) => Pago.fromMap(map)).toList();
   }
 
   //-------------- Métodos CRUD para Users -------------
@@ -73,6 +115,19 @@ class DatabaseHelper {
     final db = await database;
     final result = await db.query('users');
     return result.map((map) => User.fromMap(map)).toList();
+  }
+
+  Future<User?> getUsuarioById(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
   }
 
   Future<int> updateUser(User user) async {
@@ -128,6 +183,7 @@ class DatabaseHelper {
 
   Future<List<Prestamo>> getPrestamosPendientes() async {
     final db = await database;
+    //Filtrar solo los usuarios que si deben dinero
     final result = await db.query(
         'prestamos',
         where: 'saldoPendiente > 0',

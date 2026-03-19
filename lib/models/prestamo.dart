@@ -21,9 +21,11 @@ class Prestamo {
     required this.plazo,
   });
 
+  // Factory para convertir de Mapa (SQLite) a Objeto
   factory Prestamo.fromMap(Map<String, dynamic> json) => Prestamo(
     id: json['id'],
     userId: json['userId'],
+    //Lógica robusta para parsear doubles sin errores de tipo
     monto: (json['monto'] is String) ? double.parse(json['monto']) : (json['monto'] as num).toDouble(),
     fecha: json['fecha'],
     estado: json['estado'],
@@ -33,6 +35,7 @@ class Prestamo {
     plazo: json['plazo'],
   );
 
+  //Convertir objeto a mapa para guardar en SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -45,5 +48,31 @@ class Prestamo {
       'saldoPendiente': saldoPendiente,
       'plazo': plazo,
     };
+  }
+
+  // Metodo para crear una copia del prestamo con valores modificados
+  // Util para actualizar saldos y estados sin mutar el objeto original
+  Prestamo copyWith({
+    int? id,
+    int? userId,
+    double? monto,
+    String? fecha,
+    String? estado,
+    String? periodicidad,
+    double? interes,
+    double? saldoPendiente,
+    int? plazo,
+  }) {
+    return Prestamo(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      monto: monto ?? this.monto,
+      fecha: fecha ?? this.fecha,
+      estado: estado ?? this.estado,
+      periodicidad: periodicidad ?? this.periodicidad,
+      interes: interes ?? this.interes,
+      saldoPendiente: saldoPendiente ?? this.saldoPendiente,
+      plazo: plazo ?? this.plazo,
+    );
   }
 }

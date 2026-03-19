@@ -51,7 +51,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
     final plazoController = TextEditingController();
     User? selectedUser;
     String? selectedPeriodicidad;
-    DateTime? selectedDate = DateTime.now();
+    DateTime selectedDate = DateTime.now();
 
     final usuarios = await UserService.instance.getUsuarios();
 
@@ -82,6 +82,31 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                   items: ["Semanal", "Quincenal", "Mensual"].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
                   onChanged: (val) => setDialogState(() => selectedPeriodicidad = val),
                 ),
+
+                //---Nuevo boton de Fecha ----
+                Padding(
+                    padding:const EdgeInsets.symmetric(vertical:10.0),
+                    child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (picked != null) {
+                            //Importante: setDialogState para refrescar el boton del dialogo
+                            setDialogState(() {
+                              selectedDate = picked;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(
+                          "Fecha: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                        ),
+                    ),
+                ),
               ],
             ),
           ),
@@ -89,9 +114,14 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
             ElevatedButton(
               onPressed: () async {
-                if (selectedUser != null && selectedPeriodicidad != null && montoController.text.isNotEmpty) {
+                if (selectedUser != null &&
+                    selectedPeriodicidad != null &&
+                    montoController.text.isNotEmpty &&
+                    plazoController.text.isNotEmpty) {
+
                   final monto = double.parse(montoController.text);
                   final interes = double.parse(interesController.text);
+
                   final prestamo = Prestamo(
                     userId: selectedUser!.id!,
                     monto: monto,
@@ -103,6 +133,7 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                     plazo: int.parse(plazoController.text),
                   );
                   await DatabaseHelper.instance.insertPrestamo(prestamo);
+                  if (!mounted) return;
                   Navigator.pop(context);
                   _refreshAll();
                 }
