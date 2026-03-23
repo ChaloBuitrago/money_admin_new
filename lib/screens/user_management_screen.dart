@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/user_service.dart';
+import '../services/database_helper.dart';
 
 class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
@@ -95,9 +96,67 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 
-  void _eliminarUsuario(int id) async {
-    await UserService.instance.deleteUsuario(id);
-    _refreshUsuarios();
+  void _eliminarUsuarioSeguro(User usuario) async {
+    bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.person_remove, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text("Eliminar Usuario"),
+          ],
+        ),
+        content: Text(
+          "¿Estás seguro de que deseas eliminar a *${usuario.nombre}*?\n\n"
+              "⚠️ ¡ADVERTENCIA!: Al eliminar al usuario, también se podrían perder sus registros de préstamos asociados. Esta acción no se puede deshacer.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("CANCELAR", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("BORRAR TODO"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true) return;
+
+    try {
+      // Llamada a tu DatabaseHelper para borrar el usuario por ID
+      await DatabaseHelper.instance.deleteUser(usuario.id!);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("👤 Usuario ${usuario.nombre} eliminado"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      _refreshUsuarios(); // La función que uses para recargar la lista de usuarios
+    } catch (e) {
+      if (!mounted) return;
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Acción Bloqueada"),
+            content: Text("No puedes eliminar a ${usuario.nombre} porque tiene préstamos registrados. Debes eliminar o liquidar primero sus préstamos para poderlo borrar."),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("ENTENDIDO"))
+            ],
+          ),
+      );
+    }
   }
 
   @override
@@ -125,8 +184,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _editarUsuario(user)),
-                      IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _eliminarUsuario(user.id!)),
+                      IconButton(icon: const Icon(Icons.edit, color: Colors.pink), onPressed: () => _editarUsuario(user)),
+                      IconButton(icon: const Icon(Icons.delete, color: Colors.purple), onPressed: () => _eliminarUsuarioSeguro(user)),
                     ],
                   ),
                 ),

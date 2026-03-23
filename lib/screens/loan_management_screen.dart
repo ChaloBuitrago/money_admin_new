@@ -410,9 +410,61 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
     }
   }
 
-  void _eliminarPrestamo(int id) async {
-    await DatabaseHelper.instance.deletePrestamo(id);
-    _refreshAll();
+  void _eliminarPrestamoSeguro(Prestamo prestamo) async {
+    bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text("Eliminar Préstamo"),
+          ],
+        ),
+        content: const Text(
+          "¿Estás completamente seguro de que deseas eliminar este préstamo?\n\n"
+              "Esta acción borrará el registro de la deuda y no se puede deshacer.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // Retorna falso si cancela
+            child: const Text("CANCELAR", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red, // Botón rojo para acciones destructivas
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true), // Retorna verdadero si confirma
+            child: const Text("SÍ, ELIMINAR"),
+          ),
+        ],
+      ),
+    );
+
+    // Si el usuario canceló o cerró el cuadro, detenemos la función aquí
+    if (confirmar != true) return;
+
+    // Si confirmó, procedemos a eliminar de la base de datos
+    try {
+      await DatabaseHelper.instance.deletePrestamo(prestamo.id!); // Asegúrate de usar tu método de borrado correcto
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("🗑️ Préstamo eliminado correctamente"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+
+      _refreshAll(); // Refrescamos la lista para que desaparezca
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al eliminar: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
 
   // --- UI BUILDING ---
@@ -510,7 +562,8 @@ class _PrestamoManagementScreenState extends State<PrestamoManagementScreen> {
                         onPressed: () => _editarPrestamo(p)),
                     IconButton(
                         icon: const Icon(Icons.delete, color: Colors.purple),
-                        onPressed: () => _eliminarPrestamo(p.id!)),
+                        onPressed: () => _eliminarPrestamoSeguro(p),
+                    )
                   ],
                 ),
               );
