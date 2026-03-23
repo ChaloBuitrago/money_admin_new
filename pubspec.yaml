@@ -38,6 +38,7 @@ dependencies:
   workmanager: ^0.9.0+3  #Para tareas en segundo plano
   provider: ^6.0.5  #Para manejo de estado
   http: ^0.13.5  #Para integrar API de SMS
+  url_launcher: ^6.3.2
 
 
   # The following adds the Cupertino Icons font to your application.

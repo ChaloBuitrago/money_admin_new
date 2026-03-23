@@ -92,6 +92,27 @@ class DatabaseHelper {
     });
   }
 
+  Future<void> registrarPagoTransaccion(Pago pago, double nuevoSaldo, String nuevoEstado) async {
+    final db = await instance.database;
+
+    // Iniciamos la transacción
+    await db.transaction((txn) async {
+      // 1. Insertar el registro del pago
+      await txn.insert('pagos', pago.toMap());
+
+      // 2. Actualizar el saldo y estado en la tabla de préstamos
+      await txn.update(
+        'prestamos',
+        {
+          'saldoPendiente': nuevoSaldo,
+          'estado': nuevoEstado,
+        },
+        where: 'id = ?',
+        whereArgs: [pago.prestamoId],
+      );
+    });
+  }
+
   //2. Obtener pagos de un préstamo especifico
   Future<List<Pago>> getPagosPorPrestamo(int prestamoId) async {
     final db = await database;
