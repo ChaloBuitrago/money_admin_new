@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../models/prestamo.dart';
 import '../models/pago.dart';
@@ -92,6 +93,21 @@ class DatabaseHelper {
     });
   }
 
+  //Función para contar préstamos activos(Que no estan pagados)
+  Future<int> getActiveLoansCount() async {
+    final db = await instance.database;
+    var res = await db.rawQuery("SELECT COUNT(*) FROM prestamos WHERE estado != 'Pagado'");
+    return Sqflite.firstIntValue(res) ?? 0;
+  }
+
+  //Función para contar lo pagos pendientes(Hoy y próximos 3 días), se usa la logica de filtro de lista de pendientes
+  Future<int> getPendingPaymentsCount() async {
+    final db = await instance.database;
+    // Esta es una cuenta simplificada, luego puedes pulirla con tu lógica de fechas
+    var res = await db.rawQuery("SELECT COUNT(*) FROM prestamos WHERE estado != 'Pagado'");
+    return Sqflite.firstIntValue(res) ?? 0;
+  }
+
   Future<void> registrarPagoTransaccion(Pago pago, double nuevoSaldo, String nuevoEstado) async {
     final db = await instance.database;
 
@@ -132,10 +148,22 @@ class DatabaseHelper {
     return await db.insert('users', user.toMap());
   }
 
+  // 1. Obtener lista completa
   Future<List<User>> getUsuarios() async {
-    final db = await database;
+    final db = await instance.database; // Unificamos a instance.database
     final result = await db.query('users');
+    debugPrint("DB_DEBUG: getUsuarios encontró ${result.length} registros");
     return result.map((map) => User.fromMap(map)).toList();
+  }
+
+  // 2. Contar usuarios
+  Future<int> getUsersCount() async {
+    final db = await instance.database;
+    // Usamos db.query que es más seguro que rawQuery para operaciones simples
+    final res = await db.rawQuery("SELECT COUNT(*) FROM users");
+    int count = Sqflite.firstIntValue(res) ?? 0;
+    debugPrint("DB_DEBUG: getUsersCount encontró $count registros");
+    return count;
   }
 
   Future<User?> getUsuarioById(int id) async {

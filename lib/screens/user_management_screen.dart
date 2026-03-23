@@ -31,30 +31,62 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
     await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Crear Usuario"),
+      builder: (context) => AlertDialog( // Cambiado _ por context para evitar confusiones
+        title: const Row(
+          children: [
+            Icon(Icons.person_add, color: Colors.blue),
+            SizedBox(width: 10),
+            Text("Crear Usuario"),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nombreController, decoration: const InputDecoration(labelText: "Nombre")),
-            TextField(controller: telefonoController, decoration: const InputDecoration(labelText: "Teléfono")),
+            TextField(
+              controller: nombreController,
+              decoration: const InputDecoration(labelText: "Nombre Completo"),
+              textCapitalization: TextCapitalization.words, // Mejora la UX
+            ),
+            TextField(
+              controller: telefonoController,
+              decoration: const InputDecoration(labelText: "Teléfono / WhatsApp"),
+              keyboardType: TextInputType.phone, // Abre el teclado numérico
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCELAR", style: TextStyle(color: Colors.grey))
+          ),
           ElevatedButton(
             onPressed: () async {
-              if (nombreController.text.isNotEmpty && telefonoController.text.isNotEmpty) {
+              final nombre = nombreController.text.trim();
+              final telefono = telefonoController.text.trim();
+
+              if (nombre.isNotEmpty && telefono.isNotEmpty) {
                 final user = User(
-                  nombre: nombreController.text,
-                  telefono: telefonoController.text,
+                  nombre: nombre,
+                  telefono: telefono,
                 );
+
+                // 🔴 PUNTO CLAVE: Asegúrate de que UserService use la tabla 'usuarios'
+                // Si tienes dudas, puedes usar directamente DatabaseHelper:
+                // await DatabaseHelper.instance.insertUser(user);
+
                 await UserService.instance.insertUsuario(user);
-                Navigator.pop(context);
-                _refreshUsuarios();
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  _refreshUsuarios(); // Recarga la lista actual
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("✅ Usuario guardado correctamente")),
+                  );
+                }
               }
             },
-            child: const Text("Guardar"),
+            child: const Text("GUARDAR"),
           ),
         ],
       ),
